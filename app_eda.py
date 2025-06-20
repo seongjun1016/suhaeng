@@ -223,19 +223,15 @@ class EDA:
         # --- Tab 1: 기본 전처리 & 데이터 구조/통계 ---
         with tabs[0]:
             st.header("🛠 기본 전처리 & 데이터 구조·기초 통계")
-            # '세종'지역 결측치 '-' → 0
             mask_sejong = df['지역'] == '세종'
             df.loc[mask_sejong] = df.loc[mask_sejong].replace('-', 0)
-            # 숫자형 변환
             num_cols = ['인구', '출생아수(명)', '사망자수(명)']
             for col in num_cols:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
-            # 구조 정보
             buffer = io.StringIO()
             df.info(buf=buffer)
             st.subheader("데이터 구조 (`df.info()`)")
             st.text(buffer.getvalue())
-            # 기초 통계
             st.subheader("기초 통계량 (`df.describe()`)")
             st.dataframe(df.describe())
 
@@ -262,36 +258,37 @@ class EDA:
         # --- Tab 3: 지역별 인구 변화량 순위 분석 ---
         with tabs[2]:
             st.header("Regional Population Change Ranking")
-            # 한영 지역명 매핑
+            # 지역명 영어 매핑
             eng_map = {
                 '서울': 'Seoul', '부산': 'Busan', '대구': 'Daegu', '인천': 'Incheon',
                 '광주': 'Gwangju', '대전': 'Daejeon', '울산': 'Ulsan', '세종': 'Sejong',
-                '경기도': 'Gyeonggi-do', '강원도': 'Gangwon-do', '충청북도': 'Chungbuk',
-                '충청남도': 'Chungnam', '전라북도': 'Jeonbuk', '전라남도': 'Jeonnam',
-                '경상북도': 'Gyeongbuk', '경상남도': 'Gyeongnam', '제주특별자치도': 'Jeju'
+                '경기': 'Gyeonggi-do', '강원': 'Gangwon-do', '충북': 'Chungbuk',
+                '충남': 'Chungnam', '전북': 'Jeonbuk', '전남': 'Jeonnam',
+                '경북': 'Gyeongbuk', '경남': 'Gyeongnam', '제주': 'Jeju'
             }
-            # 전국 제외
+            # '전국' 제외
             df_reg = df[df['지역'] != '전국'].copy()
             years = sorted(df_reg['연도'].unique())
             if len(years) < 5:
-                st.warning("Not enough years of data for a 5-year comparison.")
+                st.warning("Insufficient data for 5-year comparison.")
             else:
                 start_year, end_year = years[-5], years[-1]
-                df_sum = df_reg.groupby(['지역', '연도'], as_index=False)['인구'].sum()
+                # 연도별 인구 합계
+                df_sum = df_reg.groupby(['지역','연도'], as_index=False)['인구'].sum()
                 pop_start = df_sum[df_sum['연도']==start_year].set_index('지역')['인구']
                 pop_end   = df_sum[df_sum['연도']==end_year].set_index('지역')['인구']
-                # 변화량 및 변화율
-                change      = pop_end - pop_start
-                change_k    = change / 1000
+                # 변화량, 천 단위, 변화율
+                change = pop_end - pop_start
+                change_k = change / 1000
                 change_rate = (change / pop_start) * 100
                 # 영어명 변환 및 정렬
-                change_k    = change_k.rename(index=eng_map)
+                change_k = change_k.rename(index=eng_map)
                 change_rate = change_rate.rename(index=eng_map)
-                order       = change_k.sort_values(ascending=False).index
-                change_k    = change_k.loc[order]
+                order = change_k.sort_values(ascending=False).index
+                change_k = change_k.loc[order]
                 change_rate = change_rate.loc[order]
                 # 절대 변화량 차트
-                fig1, ax1 = plt.subplots(figsize=(8, 5))
+                fig1, ax1 = plt.subplots(figsize=(8,5))
                 sns.barplot(x=change_k.values, y=change_k.index, ax=ax1, palette='tab20')
                 ax1.set_title("Population Change (Last 5 Years)")
                 ax1.set_xlabel("Change (thousands)")
@@ -302,7 +299,7 @@ class EDA:
                 fig1.tight_layout()
                 st.pyplot(fig1)
                 # 변화율 차트
-                fig2, ax2 = plt.subplots(figsize=(8, 5))
+                fig2, ax2 = plt.subplots(figsize=(8,5))
                 sns.barplot(x=change_rate.values, y=change_rate.index, ax=ax2, palette='tab20')
                 ax2.set_title("Population Change Rate (Last 5 Years)")
                 ax2.set_xlabel("Change Rate (%)")
@@ -314,7 +311,7 @@ class EDA:
                 st.pyplot(fig2)
                 st.markdown(
                     "> **Explanation:**\n"
-                    "- The first chart shows absolute population change (in thousands) over the last five years.\n"
+                    "- The first chart shows absolute population change over the last five years (in thousands), sorted descending.\n"
                     "- The second chart shows percentage change over the same period.\n"
                     "- Region names and labels are in English."
                 )
@@ -331,36 +328,38 @@ class EDA:
             top100 = df_diff.nlargest(100, 'abs_diff').copy()
             top100['인구'] = top100['인구'].apply(lambda x: f"{int(x):,}")
             top100['diff'] = top100['diff'].apply(lambda x: f"{int(x):,}")
-            display_df = top100[['지역', '연도', '인구', 'diff']].rename(columns={
-                '지역': 'Region', '연도': 'Year', '인구': 'Population', 'diff': 'Change'
+            display_df = top100[['지역','연도','인구','diff']].rename(columns={
+                '지역':'Region','연도':'Year','인구':'Population','diff':'Change'
             })
             def highlight_change(val):
-                return 'background-color: #ffcccc' if isinstance(val, str) and val.startswith('-') else 'background-color: #cce5ff'
+                return 'background-color:#ffcccc' if isinstance(val,str) and val.startswith('-') else 'background-color:#cce5ff'
             styled = display_df.style.applymap(highlight_change, subset=['Change'])
             st.dataframe(styled, use_container_width=True)
 
         # --- Tab 5: Stacked Area Chart of Population by Region & Year ---
         with tabs[4]:
             st.header("Population Trends by Region (Stacked Area Chart)")
-            df_reg3 = df[df['지역'] != '전국'].copy()
+            df_reg3 = df[df['지역']!='전국'].copy()
             df_reg3['Region'] = df_reg3['지역'].map(eng_map)
             df_reg3['Year'] = df_reg3['연도']
             pivot = (
                 df_reg3
-                .groupby(['Region', 'Year'], as_index=False)['인구']
+                .groupby(['Region','Year'], as_index=False)['인구']
                 .sum()
                 .pivot(index='Region', columns='Year', values='인구')
                 .fillna(0)
             )
-            fig3, ax3 = plt.subplots(figsize=(12, 6))
+            st.subheader("Pivot Table: Population by Region and Year")
+            st.dataframe(pivot)
+            fig3, ax3 = plt.subplots(figsize=(12,6))
             pivot.T.plot.area(ax=ax3, cmap='tab20')
             ax3.set_title("Population by Region and Year")
             ax3.set_xlabel("Year")
             ax3.set_ylabel("Population")
-            ax3.legend(title="Region", bbox_to_anchor=(1.02, 1), loc='upper left')
+            ax3.legend(title="Region", bbox_to_anchor=(1.02,1), loc='upper left')
             ax3.grid(True)
             st.pyplot(fig3)
-
+            
 
 # ---------------------
 # 페이지 객체 생성
