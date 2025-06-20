@@ -309,15 +309,9 @@ class EDA:
                     ax2.text(xloc, i, f"{v:.1f}%", va='center')
                 fig2.tight_layout()
                 st.pyplot(fig2)
-                                st.markdown(
-                    "> **설명:**
-"
-                    "- 첫 번째 차트는 최근 5년간 인구 증감 규모(천 단위)를 내림차순으로 보여줍니다.
-"
-                    "- 두 번째 차트는 같은 기간 대비 증감률(%)을 보여줍니다.
-"
-                    "- 지역명은 영어로 표기했습니다."
-                ), sorted descending.\n"
+                st.markdown(
+                    "> **Explanation:**\n"
+                    "- The first chart shows absolute population change over the last five years (in thousands), sorted descending.\n"
                     "- The second chart shows percentage change over the same period.\n"
                     "- Region names and labels are in English."
                 )
@@ -365,7 +359,7 @@ class EDA:
             ax3.legend(title="Region", bbox_to_anchor=(1.02,1), loc='upper left')
             ax3.grid(True)
             st.pyplot(fig3)
-
+            
 
 # ---------------------
 # 페이지 객체 생성
