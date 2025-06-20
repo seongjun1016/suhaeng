@@ -208,8 +208,10 @@ class EDA:
             st.info("population_trends.csv 파일을 업로드 해주세요.")
             return
 
+        # 데이터 로드
         df = pd.read_csv(uploaded)
 
+        # 탭 정의
         tabs = st.tabs([
             "1. 기본 전처리 & 구조·통계",
             "2. 연도별 추이",
@@ -244,8 +246,8 @@ class EDA:
             future_years = list(range(last_year + 1, 2036))
             future_pops = [last_pop + avg_net_change * (yr - last_year) for yr in future_years]
             fig, ax = plt.subplots()
-            ax.plot(df_national['연도'], df_national['인구'], marker='o', linestyle='-', label='Actual')
-            ax.plot(future_years, future_pops, marker='x', linestyle='--', label='Forecast (to 2035)')
+            ax.plot(df_national['연도'], df_national['인구'], 'o-', label='Actual')
+            ax.plot(future_years, future_pops, 'x--', label='Forecast')
             ax.set_title("Population Trends by Year and Forecast")
             ax.set_xlabel("Year")
             ax.set_ylabel("Population")
@@ -264,39 +266,62 @@ class EDA:
                 '경상북도': 'Gyeongbuk', '경상남도': 'Gyeongnam', '제주특별자치도': 'Jeju'
             }
             df_reg = df[df['지역'] != '전국'].copy()
-            years = sorted(df_reg['연도'].unique())
-            first_year, last_year = years[-5], years[-1]
-            pop_first = df_reg[df_reg['연도'] == first_year].groupby('지역')['인구'].sum()
-            pop_last = df_reg[df_reg['연도'] == last_year].groupby('지역')['인구'].sum()
-            change = pop_last - pop_first
-            rate = change / pop_first * 100
-            change.index = change.index.map(eng_map)
-            rate.index = rate.index.map(eng_map)
-            change_sorted = change.sort_values(ascending=False)
-            rate_sorted = rate.loc[change_sorted.index]
-            # 절대 변화량 그래프
-            fig1, ax1 = plt.subplots(figsize=(8, 5))
-            sns.barplot(x=change_sorted.values / 1000, y=change_sorted.index, ax=ax1)
-            for i, v in enumerate(change_sorted.values / 1000):
-                ax1.text(v, i, f"{v:.1f}", va='center')
-            ax1.set_title("Population Change (Last 5 Years)")
-            ax1.set_xlabel("Change (thousands)")
-            fig1.tight_layout()
-            st.pyplot(fig1)
-            # 변화율 그래프
-            fig2, ax2 = plt.subplots(figsize=(8, 5))
-            sns.barplot(x=rate_sorted.values, y=rate_sorted.index, ax=ax2)
-            for i, v in enumerate(rate_sorted.values):
-                ax2.text(v, i, f"{v:.1f}%", va='center')
-            ax2.set_title("Population Change Rate (Last 5 Years)")
-            ax2.set_xlabel("Change Rate (%)")
-            fig2.tight_layout()
-            st.pyplot(fig2)
-            st.markdown(
-                "> **해설:**\n"
-                "- The first chart shows absolute population change over the last 5 years in thousands.\n"
-                "- The second chart shows percentage change over the last 5 years."
-            )
+            years = np.sort(df_reg['연도'].unique())
+            if len(years) < 5:
+                st.warning("Not enough years of data for analysis.")
+            else:
+                last5 = years[-5:]
+                # 집계 및 피벗
+                pivot = (
+                    df_reg
+                    .groupby(['지역', '연도'], as_index=False)['인구']
+                    .sum()
+                    .pivot(index='지역', columns='연도', values='인구')
+                )
+                pivot.index = pivot.index.map(eng_map)
+                # 첫 해, 마지막 해 인구
+                pop_start = pivot[last5[0]]
+                pop_end = pivot[last5[-1]]
+                # 변화량 및 변화율
+                change = pop_end - pop_start
+                change_thousands = change / 1000
+                rate = (change / pop_start) * 100
+                # 정렬
+                change_sorted = change_thousands.sort_values(ascending=False)
+                rate_sorted = rate.loc[change_sorted.index]
+
+                # 절대 변화량 그래프
+                fig1 = plt.figure(figsize=(8, 5))
+                ax1 = fig1.add_subplot(1, 1, 1)
+                sns.barplot(x=change_sorted.values, y=change_sorted.index, ax=ax1)
+                for i, v in enumerate(change_sorted.values):
+                    offset = 0.1 * np.sign(v)
+                    ax1.text(v + offset, i, f"{v:.1f}", va='center')
+                ax1.set_title("Population Change (Last 5 Years)")
+                ax1.set_xlabel("Change (thousands)")
+                ax1.set_ylabel("")
+                fig1.tight_layout()
+                st.pyplot(fig1)
+
+                # 변화율 그래프
+                fig2 = plt.figure(figsize=(8, 5))
+                ax2 = fig2.add_subplot(1, 1, 1)
+                sns.barplot(x=rate_sorted.values, y=rate_sorted.index, ax=ax2)
+                for i, v in enumerate(rate_sorted.values):
+                    offset = 0.1 * np.sign(v)
+                    ax2.text(v + offset, i, f"{v:.1f}%", va='center')
+                ax2.set_title("Population Change Rate (Last 5 Years)")
+                ax2.set_xlabel("Change Rate (%)")
+                ax2.set_ylabel("")
+                fig2.tight_layout()
+                st.pyplot(fig2)
+
+                st.markdown(
+                    "> **Explanation:**\n"
+                    "- The first chart shows absolute population change over the last five years in thousands, sorted descending.\n"
+                    "- The second chart shows percentage change relative to the first year of the period.\n"
+                    "- Region names and labels are in English."
+                )
 
         # --- Tab 4: Top 100 Yearly Population Changes ---
         with tabs[3]:
