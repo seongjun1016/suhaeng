@@ -46,11 +46,10 @@ class Home:
         if st.session_state.get("logged_in"):
             st.success(f"{st.session_state.get('user_email')}님 환영합니다.")
 
-        # 인구 데이터 설명
+        # 데이터셋 소개
         st.markdown("""
-        ---
         **Population Trends 데이터셋**  
-        - 파일: `population_trends.csv`
+        - 파일: `population_trends.csv`  
         - 설명: 한국의 전국·광역시·도별 연도별 인구수, 출생자수, 사망자수를 포함한 시계열 데이터
         - 주요 컬럼:
           - `연도` (Year)
@@ -58,12 +57,26 @@ class Home:
           - `인구` (Population)
           - `출생아수(명)` (Births)
           - `사망자수(명)` (Deaths)
-        """ )
+        """)
+
+        # 앱 기능 안내
+        with st.expander("🛠️ 앱 기능 안내"):
+            st.markdown("""
+            1. **기본 전처리 & 구조·통계**
+               - CSV 업로드 후 결측치 처리, `info` 및 `describe` 확인
+            2. **연도별 추이**
+               - 전국 인구 변화 시각화 및 2035년 예측
+            3. **지역별 분석**
+               - 최근 5년 각 지역 인구 증감량 및 증감률 순위 차트
+            4. **변화량 분석**
+               - 연도별 인구 변화 상위 100개 케이스 테이블 표시
+            5. **시각화**
+               - 지역별 누적 영역 그래프
+            """)
+
+        st.markdown("Streamlit 앱 상단 메뉴에서 'EDA' 탭으로 이동하여, 분석을 시작하세요.")
         
-        st.markdown(
-            "Streamlit 앱 상단 메뉴에서 'EDA' 탭으로 이동하여, 지역별·연도별 인구 현황과 추이를 확인하세요."
-        )
-        
+
 # ---------------------
 # 로그인 페이지 클래스
 # ---------------------
