@@ -46,23 +46,24 @@ class Home:
         if st.session_state.get("logged_in"):
             st.success(f"{st.session_state.get('user_email')}님 환영합니다.")
 
-        # Kaggle 데이터셋 출처 및 소개
+        # 인구 데이터 설명
         st.markdown("""
-                ---
-                **Bike Sharing Demand 데이터셋**  
-                - 제공처: [Kaggle Bike Sharing Demand Competition](https://www.kaggle.com/c/bike-sharing-demand)  
-                - 설명: 2011–2012년 캘리포니아 주의 수도인 미국 워싱턴 D.C. 인근 도시에서 시간별 자전거 대여량을 기록한 데이터  
-                - 주요 변수:  
-                  - `datetime`: 날짜 및 시간  
-                  - `season`: 계절  
-                  - `holiday`: 공휴일 여부  
-                  - `workingday`: 근무일 여부  
-                  - `weather`: 날씨 상태  
-                  - `temp`, `atemp`: 기온 및 체감온도  
-                  - `humidity`, `windspeed`: 습도 및 풍속  
-                  - `casual`, `registered`, `count`: 비등록·등록·전체 대여 횟수  
-                """)
-
+        ---
+        **Population Trends 데이터셋**  
+        - 파일: `population_trends.csv`
+        - 설명: 한국의 전국·광역시·도별 연도별 인구수, 출생자수, 사망자수를 포함한 시계열 데이터
+        - 주요 컬럼:
+          - `연도` (Year)
+          - `지역` (Region)
+          - `인구` (Population)
+          - `출생아수(명)` (Births)
+          - `사망자수(명)` (Deaths)
+        """ )
+        
+        st.markdown(
+            "Streamlit 앱 상단 메뉴에서 'EDA' 탭으로 이동하여, 지역별·연도별 인구 현황과 추이를 확인하세요."
+        )
+        
 # ---------------------
 # 로그인 페이지 클래스
 # ---------------------
