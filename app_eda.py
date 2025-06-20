@@ -299,31 +299,30 @@ class EDA:
             change_sorted = change.sort_values(ascending=False)
 
             # 수평 막대그래프 (절대 증감량)
-            fig1, ax1 = plt.subplots()
+            fig1, ax1 = plt.subplots(figsize=(8, 5))
             sns.barplot(x=change_sorted.values / 1000, y=change_sorted.index, ax=ax1)
             for i, v in enumerate(change_sorted.values / 1000):
                 ax1.text(v, i, f"{v:.1f}", va='center')
             ax1.set_title("Population Change (Last 5 Years)")
             ax1.set_xlabel("Change (thousands)")
-            ax1.set_ylabel("")
+            fig1.tight_layout()
             st.pyplot(fig1)
 
             # 증감률
             rate = (change / pivot[last5[0]] * 100).loc[change_sorted.index]
-            fig2, ax2 = plt.subplots()
+            fig2, ax2 = plt.subplots(figsize=(8, 5))
             sns.barplot(x=rate.values, y=rate.index, ax=ax2)
             for i, v in enumerate(rate.values):
                 ax2.text(v, i, f"{v:.1f}%", va='center')
             ax2.set_title("Population Change Rate (Last 5 Years)")
             ax2.set_xlabel("Change Rate (%)")
-            ax2.set_ylabel("")
+            fig2.tight_layout()
             st.pyplot(fig2)
 
             st.markdown(
                 "> **해설:**\n"
-                "- Graph 1 shows absolute population change over the last 5 years in thousands.\n"
-                "- Higher ranking indicates greater numerical growth, lower indicates decline.\n"
-                "- Graph 2 shows percentage change, indicating rate of change relative to 5 years ago."
+                "- 첫 번째 그래프는 최근 5년간 각 지역별 인구 증감 규모를 천 단위로 보여줍니다.\n"
+                "- 두 번째 그래프는 증감률(%)을 보여주어, 상대적 변화를 파악할 수 있습니다."
             )
 
         # --- Tab 4: Top 100 Yearly Population Changes ---
@@ -383,6 +382,7 @@ class EDA:
 
             st.pyplot(fig)
 
+            
 # ---------------------
 # 페이지 객체 생성
 # ---------------------
