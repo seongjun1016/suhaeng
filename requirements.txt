@@ -3,3 +3,5 @@ pyrebase4
 setuptools
 matplotlib
 seaborn
+pyrebase4
+setuptools
