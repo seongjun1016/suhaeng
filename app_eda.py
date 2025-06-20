@@ -224,22 +224,22 @@ class EDA:
         with tabs[0]:
             st.header("🛠 기본 전처리 & 데이터 구조·기초 통계")
 
-            # 1) '세종'지역의 결측치 '-' → 0 치환
+            # '세종'지역의 결측치 '-' → 0 치환
             mask_sejong = df['지역'] == '세종'
             df.loc[mask_sejong] = df.loc[mask_sejong].replace('-', 0)
 
-            # 2) 주요 열을 숫자형으로 변환
+            # 주요 열을 숫자형으로 변환
             num_cols = ['인구', '출생아수(명)', '사망자수(명)']
             for col in num_cols:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
 
-            # 3) 데이터 구조 출력
+            # 데이터 구조 출력
             st.subheader("데이터 구조 (`df.info()`)")
             buffer = io.StringIO()
             df.info(buf=buffer)
             st.text(buffer.getvalue())
 
-            # 4) 기초 통계량 출력
+            # 기초 통계량 출력
             st.subheader("기초 통계량 (`df.describe()`)")
             st.dataframe(df.describe())
 
@@ -364,7 +364,14 @@ class EDA:
             df_reg['Region'] = df_reg['지역'].map(eng_map)
             df_reg['Year'] = df_reg['연도']
 
-            pivot = df_reg.pivot(index='Region', columns='Year', values='인구').fillna(0)
+            # 중복 제거 후 집계
+            pivot = (
+                df_reg
+                .groupby(['Region', 'Year'], as_index=False)['인구']
+                .sum()
+                .pivot(index='Region', columns='Year', values='인구')
+                .fillna(0)
+            )
 
             fig, ax = plt.subplots(figsize=(12, 6))
             pivot.T.plot.area(ax=ax, cmap='tab20')
